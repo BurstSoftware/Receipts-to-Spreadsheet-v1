@@ -24,29 +24,43 @@ def main():
         submit_button = st.form_submit_button(label='Save Receipt')
 
         if submit_button:
-            # Parse line items
-            items = [item.split(',', 1) for item in line_items.split('\n') if item]
-            receipt_data = {
-                'Company': [company_name] * len(items),
-                'Date': [date] * len(items),
-                'Time': [time] * len(items),
-                'Item': [item[0].strip() for item in items],
-                'Price': [float(item[1].strip()) for item in items],
-                'Tax': [tax] * len(items),
-                'Sub Total': [sub_total] * len(items),
-                'Total': [total] * len(items)
-            }
+            # Parse line items with error handling
+            items = []
+            for line in line_items.split('\n'):
+                if line.strip():  # Skip empty lines
+                    parts = line.split(',', 1)
+                    if len(parts) == 2:
+                        try:
+                            items.append((parts[0].strip(), float(parts[1].strip())))
+                        except ValueError:
+                            st.error(f"Invalid price format for item: {parts[0]}")
+                    else:
+                        st.error(f"Item format incorrect for: {line}")
             
-            df = pd.DataFrame(receipt_data)
-            
-            # Download CSV
-            csv = convert_df(df)
-            st.download_button(
-                label="Download Receipt as CSV",
-                data=csv,
-                file_name=f"receipt_{date.strftime('%Y%m%d')}.csv",
-                mime='text/csv',
-            )
+            if items:
+                receipt_data = {
+                    'Company': [company_name] * len(items),
+                    'Date': [date] * len(items),
+                    'Time': [time] * len(items),
+                    'Item': [item[0] for item in items],
+                    'Price': [item[1] for item in items],
+                    'Tax': [tax] * len(items),
+                    'Sub Total': [sub_total] * len(items),
+                    'Total': [total] * len(items)
+                }
+                
+                df = pd.DataFrame(receipt_data)
+                
+                # Download CSV
+                csv = convert_df(df)
+                st.download_button(
+                    label="Download Receipt as CSV",
+                    data=csv,
+                    file_name=f"receipt_{date.strftime('%Y%m%d')}.csv",
+                    mime='text/csv',
+                )
+            else:
+                st.warning('No valid items were entered. Please check the format of your line items.')
 
     # Upload and append to existing CSV
     st.subheader('Upload Existing Receipt CSV')
