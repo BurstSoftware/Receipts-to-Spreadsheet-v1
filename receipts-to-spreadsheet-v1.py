@@ -6,6 +6,9 @@ import re
 import pandas as pd
 from datetime import datetime
 
+# Explicitly set the tesseract command path
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+
 def process_receipt_image(image):
     """
     Process the receipt image using OCR and extract relevant information
