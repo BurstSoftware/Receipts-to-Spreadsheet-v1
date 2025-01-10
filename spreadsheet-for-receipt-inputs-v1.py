@@ -26,6 +26,20 @@ def parse_line_items(line_items):
 def main():
     st.title('Receipt Input Application')
 
+    # Simplified Download Test
+    st.subheader('Download Test')
+    test_df = pd.DataFrame({
+        'Test': ['Data1', 'Data2'],
+        'Number': [1, 2]
+    })
+    test_csv = convert_df(test_df)
+    st.download_button(
+        label="Download Test CSV",
+        data=test_csv,
+        file_name="test.csv",
+        mime='text/csv',
+    )
+
     if 'form_data' not in st.session_state:
         st.session_state.form_data = {
             'company_name': '',
@@ -37,6 +51,7 @@ def main():
             'total': 0.0
         }
 
+    st.subheader('Receipt Input')
     with st.form(key='receipt_form'):
         st.session_state.form_data['company_name'] = st.text_input('Company Name', st.session_state.form_data['company_name'])
         st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
