@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import io
 
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
@@ -36,24 +37,22 @@ def main():
                 item_name = st.text_input(f'Item Name {i+1}', key=f'item_name_{i}')
             with col2:
                 price = st.number_input(f'Price {i+1}', min_value=0.0, format="%.2f", key=f'price_{i}')
-            st.session_state.form_data['items'][i] = {'Item': item_name, 'Price': price}  # Update existing items
+            # Update existing items or extend the list if necessary
+            if i < len(st.session_state.form_data['items']):
+                st.session_state.form_data['items'][i] = {'Item': item_name, 'Price': price}
+            else:
+                st.session_state.form_data['items'].append({'Item': item_name, 'Price': price})
 
         # Button to add more items
         if st.form_submit_button('Add Item', type="secondary"):
             st.session_state.item_count += 1
-            st.session_state.form_data['items'].append({'Item': '', 'Price': 0.0})  # Add empty item
             st.experimental_rerun()  # Rerun to update UI with new item input fields
 
         submit = st.form_submit_button('Save Receipt')
 
         if submit:
             # Validate and prepare items data
-            items = []
-            for item in st.session_state.form_data['items']:
-                if item['Item'] and item['Price'] > 0:
-                    items.append(item)
-                elif item['Item'] or item['Price'] > 0:
-                    st.error(f"Both item name and price must be provided for item: {item['Item'] or 'Unknown'}")
+            items = [item for item in st.session_state.form_data['items'] if item['Item'] and item['Price'] > 0]
             
             if items:
                 receipt_data = pd.DataFrame({
