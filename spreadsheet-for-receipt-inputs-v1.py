@@ -1,14 +1,9 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import io
 
 def convert_df(df):
-    # Convert to CSV in memory
-    buffer = io.StringIO()
-    df.to_csv(buffer, index=False)
-    buffer.seek(0)
-    return buffer
+    return df.to_csv(index=False)
 
 def main():
     st.title('Simplified Receipt Input Application')
@@ -71,12 +66,11 @@ def main():
                 st.write("Receipt Details:", receipt_data)
                 
                 if not receipt_data.empty:
-                    # Use the updated convert_df function
-                    csv_file = convert_df(receipt_data)
+                    csv_data = convert_df(receipt_data)
                     
                     st.download_button(
                         label="Download Receipt",
-                        data=csv_file,
+                        data=csv_data,
                         file_name=f"receipt_{st.session_state.form_data['date'].strftime('%Y%m%d')}.csv",
                         mime='text/csv',
                     )
