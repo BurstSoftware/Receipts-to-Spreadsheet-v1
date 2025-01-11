@@ -40,8 +40,9 @@ def main():
             st.session_state.form_data['items'].append({'Item': item_name, 'Price': price})
         
         # Button to add more items
-        if st.button('Add Item'):
+        if st.form_submit_button('Add Item', type="secondary"):  # This will act like a submit button for the form
             st.session_state.item_count += 1
+            st.experimental_rerun()  # Rerun to update UI with new item input fields
 
         submit = st.form_submit_button('Save Receipt')
 
