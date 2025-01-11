@@ -17,6 +17,8 @@ def main():
             'tax': 0.0,
             'total': 0.0
         }
+    if 'item_count' not in st.session_state:
+        st.session_state.item_count = 0
 
     # Receipt Input Form
     with st.form(key='receipt_form'):
@@ -27,21 +29,19 @@ def main():
         
         # Dynamic line item inputs
         st.subheader('Line Items')
-        if 'item_count' not in st.session_state:
-            st.session_state.item_count = 0
-
-        # Add new item input
+        
         for i in range(st.session_state.item_count):
             col1, col2 = st.columns(2)
             with col1:
                 item_name = st.text_input(f'Item Name {i+1}', key=f'item_name_{i}')
             with col2:
                 price = st.number_input(f'Price {i+1}', min_value=0.0, format="%.2f", key=f'price_{i}')
-            st.session_state.form_data['items'].append({'Item': item_name, 'Price': price})
-        
+            st.session_state.form_data['items'][i] = {'Item': item_name, 'Price': price}  # Update existing items
+
         # Button to add more items
-        if st.form_submit_button('Add Item', type="secondary"):  # This will act like a submit button for the form
+        if st.form_submit_button('Add Item', type="secondary"):
             st.session_state.item_count += 1
+            st.session_state.form_data['items'].append({'Item': '', 'Price': 0.0})  # Add empty item
             st.experimental_rerun()  # Rerun to update UI with new item input fields
 
         submit = st.form_submit_button('Save Receipt')
