@@ -37,7 +37,7 @@ def main():
                 item_name = st.text_input(f'Item Name {i+1}', key=f'item_name_{i}')
             with col2:
                 price = st.number_input(f'Price {i+1}', min_value=0.0, format="%.2f", key=f'price_{i}')
-            # Update existing items or extend the list if necessary
+            # Update or extend the items list
             if i < len(st.session_state.form_data['items']):
                 st.session_state.form_data['items'][i] = {'Item': item_name, 'Price': price}
             else:
@@ -67,10 +67,14 @@ def main():
                 st.write("Receipt Details:", receipt_data)
                 
                 if not receipt_data.empty:
-                    csv = convert_df(receipt_data)
+                    # Convert DataFrame to CSV and ensure it's bytes
+                    csv_bytes = io.BytesIO()
+                    receipt_data.to_csv(csv_bytes, index=False)
+                    csv_bytes = csv_bytes.getvalue()
+                    
                     st.download_button(
                         label="Download Receipt",
-                        data=csv,
+                        data=csv_bytes,
                         file_name=f"receipt_{st.session_state.form_data['date'].strftime('%Y%m%d')}.csv",
                         mime='text/csv',
                     )
