@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import io
 
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
@@ -9,8 +8,7 @@ def convert_df(df):
 def parse_line_items(line_items):
     items = []
     for line in line_items.split('\n'):
-        line = line.strip()
-        if line:
+        if line.strip():
             parts = line.split(',', 1)
             if len(parts) == 2:
                 item_name, price_str = parts
@@ -24,78 +22,54 @@ def parse_line_items(line_items):
     return items
 
 def main():
-    st.title('Receipt Input Application')
+    st.title('Simplified Receipt Input Application')
 
-    # Simplified Download Test
-    st.subheader('Download Test')
-    test_df = pd.DataFrame({
-        'Test': ['Data1', 'Data2'],
-        'Number': [1, 2]
-    })
-    test_csv = convert_df(test_df)
-    st.download_button(
-        label="Download Test CSV",
-        data=test_csv,
-        file_name="test.csv",
-        mime='text/csv',
-    )
-
+    # Initialize session state
     if 'form_data' not in st.session_state:
         st.session_state.form_data = {
             'company_name': '',
             'date': datetime.now().date(),
-            'time': datetime.now().time(),
             'line_items': '',
             'tax': 0.0,
-            'sub_total': 0.0,
             'total': 0.0
         }
 
-    st.subheader('Receipt Input')
+    # Receipt Input Form
     with st.form(key='receipt_form'):
         st.session_state.form_data['company_name'] = st.text_input('Company Name', st.session_state.form_data['company_name'])
         st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
-        st.session_state.form_data['time'] = st.time_input('Time', st.session_state.form_data['time'])
-        st.session_state.form_data['line_items'] = st.text_area('Line Items (one per line, format: Item Name, Price)', st.session_state.form_data['line_items'])
+        st.session_state.form_data['line_items'] = st.text_area('Line Items (Item Name, Price per line)', st.session_state.form_data['line_items'])
         st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
-        st.session_state.form_data['sub_total'] = st.number_input('Sub Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['sub_total'])
         st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
         
-        submit_button = st.form_submit_button(label='Save Receipt')
+        submit = st.form_submit_button('Save Receipt')
 
-        if submit_button:
+        if submit:
             items = parse_line_items(st.session_state.form_data['line_items'])
             if items:
-                receipt_data = {
+                receipt_data = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']] * len(items),
                     'Date': [st.session_state.form_data['date']] * len(items),
-                    'Time': [st.session_state.form_data['time']] * len(items),
                     'Item': [item['Item'] for item in items],
                     'Price': [item['Price'] for item in items],
                     'Tax': [st.session_state.form_data['tax']] * len(items),
-                    'Sub Total': [st.session_state.form_data['sub_total']] * len(items),
                     'Total': [st.session_state.form_data['total']] * len(items)
-                }
+                })
                 
-                df = pd.DataFrame(receipt_data)
+                st.write("Receipt Details:", receipt_data)
                 
-                # Debug: Print df to check content before download
-                st.write("Debug DataFrame Content:", df)
-                
-                if not df.empty:  # Check if DataFrame is not empty
-                    csv = convert_df(df)
+                if not receipt_data.empty:
+                    csv = convert_df(receipt_data)
                     st.download_button(
-                        label="Download Receipt as CSV",
+                        label="Download Receipt",
                         data=csv,
                         file_name=f"receipt_{st.session_state.form_data['date'].strftime('%Y%m%d')}.csv",
                         mime='text/csv',
                     )
                 else:
-                    st.warning('The resulting DataFrame is empty. No file to download.')
+                    st.warning('No items to download.')
             else:
-                st.warning('No valid items were entered. Please check the format of your line items.')
-
-    # ... (keep the existing CSV upload and append logic if needed)
+                st.warning('Please enter valid line items.')
 
 if __name__ == "__main__":
     main()
