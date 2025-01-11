@@ -5,22 +5,6 @@ from datetime import datetime
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
 
-def parse_line_items(line_items):
-    items = []
-    for line in line_items.split('\n'):
-        if line.strip():
-            parts = line.split(',', 1)
-            if len(parts) == 2:
-                item_name, price_str = parts
-                try:
-                    price = float(price_str.strip())
-                    items.append({'Item': item_name.strip(), 'Price': price})
-                except ValueError:
-                    st.error(f"Invalid price format for item: {item_name}")
-            else:
-                st.error(f"Item format incorrect for: {line}")
-    return items
-
 def main():
     st.title('Simplified Receipt Input Application')
 
@@ -29,7 +13,7 @@ def main():
         st.session_state.form_data = {
             'company_name': '',
             'date': datetime.now().date(),
-            'line_items': '',
+            'items': [],
             'tax': 0.0,
             'total': 0.0
         }
@@ -38,14 +22,38 @@ def main():
     with st.form(key='receipt_form'):
         st.session_state.form_data['company_name'] = st.text_input('Company Name', st.session_state.form_data['company_name'])
         st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
-        st.session_state.form_data['line_items'] = st.text_area('Line Items (Item Name, Price per line)', st.session_state.form_data['line_items'])
         st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
         st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
         
+        # Dynamic line item inputs
+        st.subheader('Line Items')
+        if 'item_count' not in st.session_state:
+            st.session_state.item_count = 0
+
+        # Add new item input
+        for i in range(st.session_state.item_count):
+            col1, col2 = st.columns(2)
+            with col1:
+                item_name = st.text_input(f'Item Name {i+1}', key=f'item_name_{i}')
+            with col2:
+                price = st.number_input(f'Price {i+1}', min_value=0.0, format="%.2f", key=f'price_{i}')
+            st.session_state.form_data['items'].append({'Item': item_name, 'Price': price})
+        
+        # Button to add more items
+        if st.button('Add Item'):
+            st.session_state.item_count += 1
+
         submit = st.form_submit_button('Save Receipt')
 
         if submit:
-            items = parse_line_items(st.session_state.form_data['line_items'])
+            # Validate and prepare items data
+            items = []
+            for item in st.session_state.form_data['items']:
+                if item['Item'] and item['Price'] > 0:
+                    items.append(item)
+                elif item['Item'] or item['Price'] > 0:
+                    st.error(f"Both item name and price must be provided for item: {item['Item'] or 'Unknown'}")
+            
             if items:
                 receipt_data = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']] * len(items),
@@ -69,7 +77,7 @@ def main():
                 else:
                     st.warning('No items to download.')
             else:
-                st.warning('Please enter valid line items.')
+                st.warning('Please enter at least one valid item.')
 
 if __name__ == "__main__":
     main()
