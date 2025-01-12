@@ -1,9 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import io
 
 def convert_df(df):
-    return df.to_csv(index=False).encode('utf-8')  # Ensure CSV is encoded to bytes
+    # Convert to CSV in memory
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=False)
+    buffer.seek(0)
+    return buffer
 
 def main():
     st.title('Simplified Receipt Input Application')
@@ -23,6 +28,9 @@ def main():
     # Receipt Input Form
     with st.form(key='receipt_form'):
         st.session_state.form_data['company_name'] = st.text_input('Company Name', st.session_state.form_data['company_name'])
+        st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
+        st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
+        st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
         
         # Dynamic line item inputs
         st.subheader('Line Items')
@@ -44,10 +52,6 @@ def main():
             st.session_state.item_count += 1
             st.experimental_rerun()  # Rerun to update UI with new item input fields
 
-        st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
-        st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
-        st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
-        
         submit = st.form_submit_button('Save Receipt')
 
         if submit:
@@ -67,11 +71,12 @@ def main():
                 st.write("Receipt Details:", receipt_data)
                 
                 if not receipt_data.empty:
-                    csv_data = convert_df(receipt_data)
+                    # Use the updated convert_df function
+                    csv_file = convert_df(receipt_data)
                     
                     st.download_button(
                         label="Download Receipt",
-                        data=csv_data,
+                        data=csv_file,
                         file_name=f"receipt_{st.session_state.form_data['date'].strftime('%Y%m%d')}.csv",
                         mime='text/csv',
                     )
