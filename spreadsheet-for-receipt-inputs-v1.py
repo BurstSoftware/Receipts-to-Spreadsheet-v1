@@ -5,10 +5,8 @@ from datetime import datetime
 def convert_df(df):
     """Convert a DataFrame to a CSV string encoded as UTF-8."""
     try:
-        if df.empty:
-            st.warning("The DataFrame is empty. No data to convert.")
-            return None
-        return df.to_csv(index=False).encode('utf-8')
+        csv = df.to_csv(index=False).encode('utf-8')  # Ensure bytes encoding
+        return csv
     except Exception as e:
         st.error(f"Error in converting DataFrame: {e}")
         return None
