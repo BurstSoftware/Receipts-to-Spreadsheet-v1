@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def convert_df(df):
-    return df.to_csv(index=False)
+    return df.to_csv(index=False).encode('utf-8')  # Ensure CSV is encoded to bytes
 
 def main():
     st.title('Simplified Receipt Input Application')
