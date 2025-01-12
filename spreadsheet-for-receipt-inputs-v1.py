@@ -23,9 +23,6 @@ def main():
     # Receipt Input Form
     with st.form(key='receipt_form'):
         st.session_state.form_data['company_name'] = st.text_input('Company Name', st.session_state.form_data['company_name'])
-        st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
-        st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
-        st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
         
         # Dynamic line item inputs
         st.subheader('Line Items')
@@ -47,6 +44,10 @@ def main():
             st.session_state.item_count += 1
             st.experimental_rerun()  # Rerun to update UI with new item input fields
 
+        st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
+        st.session_state.form_data['tax'] = st.number_input('Tax', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax'])
+        st.session_state.form_data['total'] = st.number_input('Total', min_value=0.0, format="%.2f", value=st.session_state.form_data['total'])
+        
         submit = st.form_submit_button('Save Receipt')
 
         if submit:
