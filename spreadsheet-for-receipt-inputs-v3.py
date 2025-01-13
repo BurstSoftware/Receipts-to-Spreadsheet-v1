@@ -9,10 +9,9 @@ def convert_df(df):
         return None
     return df.to_csv(index=False).encode('utf-8')
 
-def calculate_totals(items, tax_rate):
-    """Calculate subtotal, tax amount, and total."""
+def calculate_totals(items, tax_amount):
+    """Calculate subtotal and total with fixed tax amount."""
     subtotal = sum(item['Price'] for item in items if item['Price'] > 0)
-    tax_amount = subtotal * (tax_rate / 100)  # Convert tax percentage to decimal
     total = subtotal + tax_amount
     return subtotal, tax_amount, total
 
@@ -25,7 +24,7 @@ def main():
             'company_name': '',
             'date': datetime.now().date(),
             'items': [],
-            'tax_rate': 0.0,
+            'tax_amount': 0.0,
             'total': 0.0
         }
     if 'item_count' not in st.session_state:
@@ -58,13 +57,13 @@ def main():
             st.session_state.item_count += 1
             st.experimental_rerun()
 
-        # Tax rate input (as percentage)
-        tax_rate = st.number_input('Tax Rate (%)', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax_rate'])
-        st.session_state.form_data['tax_rate'] = tax_rate
+        # Tax amount input
+        tax_amount = st.number_input('Tax Amount ($)', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax_amount'])
+        st.session_state.form_data['tax_amount'] = tax_amount
 
         # Calculate and display running totals
         valid_items = [item for item in st.session_state.form_data['items'] if item['Item'] and item['Price'] > 0]
-        subtotal, tax_amount, total = calculate_totals(valid_items, tax_rate)
+        subtotal, tax_amount, total = calculate_totals(valid_items, tax_amount)
 
         # Display running totals
         st.write(f"Subtotal: ${subtotal:.2f}")
@@ -81,7 +80,6 @@ def main():
                     'Date': [item['Date'] for item in valid_items],
                     'Item': [item['Item'] for item in valid_items],
                     'Price': [item['Price'] for item in valid_items],
-                    'Tax Rate': [tax_rate] * len(valid_items),
                     'Tax Amount': [tax_amount / len(valid_items)] * len(valid_items),  # Distribute tax equally
                     'Total': [total] * len(valid_items)
                 })
