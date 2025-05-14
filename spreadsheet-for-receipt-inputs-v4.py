@@ -22,7 +22,6 @@ def main():
     if 'form_data' not in st.session_state:
         st.session_state.form_data = {
             'company_name': '',
-            'date': datetime.now().date(),
             'items': [],
             'tax_amount': 0.0,
             'total': 0.0
@@ -78,8 +77,6 @@ def main():
         st.write(f"Tax Amount: ${total_tax:.2f}")
         st.write(f"Total: ${total:.2f}")
 
-        st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
-
         # Submit form
         if st.form_submit_button('Save Receipt'):
             if valid_items:
@@ -95,9 +92,10 @@ def main():
                 })
 
                 # Total Tax row
+                # Use the date from the first line item for consistency
                 tax_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
-                    'Date': [st.session_state.form_data['date']],
+                    'Date': [valid_items[0]['Date']],
                     'Item': [''],
                     'Price': [''],
                     'Description': ['Total Tax'],
@@ -107,7 +105,7 @@ def main():
                 # Total row
                 total_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
-                    'Date': [st.session_state.form_data['date']],
+                    'Date': [valid_items[0]['Date']],
                     'Item': [''],
                     'Price': [''],
                     'Description': ['Total'],
