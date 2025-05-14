@@ -92,7 +92,6 @@ def main():
                 })
 
                 # Total Tax row
-                # Use the date from the first line item for consistency
                 tax_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
                     'Date': [valid_items[0]['Date']],
@@ -120,7 +119,7 @@ def main():
                 st.session_state.form_submitted = False
 
     # Handle download button outside the form
-    if st.session_state.form_submitted:
+    if st.session_state.form_submitted and valid_items:  # Ensure valid_items exists
         st.write("Receipt Details:")
         st.dataframe(st.session_state.receipt_data)
 
@@ -129,7 +128,7 @@ def main():
             st.download_button(
                 label="Download Receipt",
                 data=csv_data,
-                file_name=f"receipt_{st.session_state.form_data['date'].strftime('%Y%m%d')}.csv",
+                file_name=f"receipt_{valid_items[0]['Date'].strftime('%Y%m%d')}.csv",  # Use first line item's date
                 mime='text/csv',
             )
 
