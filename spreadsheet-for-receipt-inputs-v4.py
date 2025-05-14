@@ -24,7 +24,7 @@ def main():
             'company_name': '',
             'date': datetime.now().date(),
             'items': [],
-            'tax_amount': 0.0,
+            'tax_amount': 0.0,  # Initialize tax_amount to avoid KeyError
             'total': 0.0
         }
     if 'item_count' not in st.session_state:
