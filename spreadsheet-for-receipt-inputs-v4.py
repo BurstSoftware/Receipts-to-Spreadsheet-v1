@@ -24,7 +24,7 @@ def main():
             'company_name': '',
             'date': datetime.now().date(),
             'items': [],
-            'tax_amount': 0.0,  # Initialize tax_amount to avoid KeyError
+            'tax_amount': 0.0,
             'total': 0.0
         }
     if 'item_count' not in st.session_state:
@@ -83,15 +83,39 @@ def main():
         # Submit form
         if st.form_submit_button('Save Receipt'):
             if valid_items:
-                # Distribute tax equally across items for the DataFrame
-                tax_per_item = tax_amount / len(valid_items) if len(valid_items) > 0 else 0
-                st.session_state.receipt_data = pd.DataFrame({
+                # Create separate DataFrames for line items, tax, and total
+                # Line items DataFrame
+                line_items_df = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']] * len(valid_items),
                     'Date': [item['Date'] for item in valid_items],
                     'Item': [item['Item'] for item in valid_items],
                     'Price': [item['Price'] for item in valid_items],
-                    'Tax Amount': [tax_per_item] * len(valid_items),  # Distribute tax equally
+                    'Description': [''] * len(valid_items),
+                    'Amount': [''] * len(valid_items)  # Empty for line items
                 })
+
+                # Total Tax row
+                tax_row = pd.DataFrame({
+                    'Company': [st.session_state.form_data['company_name']],
+                    'Date': [st.session_state.form_data['date']],
+                    'Item': [''],
+                    'Price': [''],
+                    'Description': ['Total Tax'],
+                    'Amount': [tax_amount]
+                })
+
+                # Total row
+                total_row = pd.DataFrame({
+                    'Company': [st.session_state.form_data['company_name']],
+                    'Date': [st.session_state.form_data['date']],
+                    'Item': [''],
+                    'Price': [''],
+                    'Description': ['Total'],
+                    'Amount': [total]
+                })
+
+                # Concatenate all rows into a single DataFrame
+                st.session_state.receipt_data = pd.concat([line_items_df, tax_row, total_row], ignore_index=True)
                 st.session_state.form_submitted = True
             else:
                 st.warning("Please provide at least one valid item.")
