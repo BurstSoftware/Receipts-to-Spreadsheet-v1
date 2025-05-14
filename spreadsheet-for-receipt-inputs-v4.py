@@ -9,11 +9,12 @@ def convert_df(df):
         return None
     return df.to_csv(index=False).encode('utf-8')
 
-def calculate_totals(items, tax_amount):
-    """Calculate subtotal and total with fixed tax amount."""
+def calculate_totals(items):
+    """Calculate subtotal, total tax, and total based on items."""
     subtotal = sum(item['Price'] for item in items if item['Price'] > 0)
-    total = subtotal + tax_amount
-    return subtotal, tax_amount, total
+    total_tax = sum(item['Tax'] for item in items if item['Price'] > 0)  # Sum of per-item taxes
+    total = subtotal + total_tax
+    return subtotal, total_tax, total
 
 def main():
     st.title('Simplified Receipt Input Application')
@@ -24,7 +25,6 @@ def main():
             'company_name': '',
             'date': datetime.now().date(),
             'items': [],
-            'tax_amount': 0.0,
             'total': 0.0
         }
     if 'item_count' not in st.session_state:
@@ -40,34 +40,42 @@ def main():
 
         st.subheader('Line Items')
         for i in range(st.session_state.item_count):
-            col1, col2, col3 = st.columns([2, 1, 1])
+            col1, col2, col3, col4 = st.columns([2, 1, 1, 1])  # Four columns for Item Name, Price, Tax Amount, Date
             with col1:
                 item_name = st.text_input(f'Item Name {i+1}', key=f'item_name_{i}')
             with col2:
                 price = st.number_input(f'Price {i+1}', min_value=0.0, format="%.2f", key=f'price_{i}')
             with col3:
+                tax = st.number_input(f'Tax Amount {i+1} ($)', min_value=0.0, format="%.2f", key=f'tax_{i}')
+            with col4:
                 item_date = st.date_input(f'Date {i+1}', datetime.now().date(), key=f'item_date_{i}')
             
             if i < len(st.session_state.form_data['items']):
-                st.session_state.form_data['items'][i] = {'Item': item_name, 'Price': price, 'Date': item_date}
+                st.session_state.form_data['items'][i] = {
+                    'Item': item_name, 
+                    'Price': price, 
+                    'Tax': tax, 
+                    'Date': item_date
+                }
             else:
-                st.session_state.form_data['items'].append({'Item': item_name, 'Price': price, 'Date': item_date})
+                st.session_state.form_data['items'].append({
+                    'Item': item_name, 
+                    'Price': price, 
+                    'Tax': tax, 
+                    'Date': item_date
+                })
 
         if st.form_submit_button('Add Item', type="secondary"):
             st.session_state.item_count += 1
             st.experimental_rerun()
 
-        # Tax amount input
-        tax_amount = st.number_input('Tax Amount ($)', min_value=0.0, format="%.2f", value=st.session_state.form_data['tax_amount'])
-        st.session_state.form_data['tax_amount'] = tax_amount
-
         # Calculate and display running totals
         valid_items = [item for item in st.session_state.form_data['items'] if item['Item'] and item['Price'] > 0]
-        subtotal, tax_amount, total = calculate_totals(valid_items, tax_amount)
+        subtotal, total_tax, total = calculate_totals(valid_items)
 
         # Display running totals
         st.write(f"Subtotal: ${subtotal:.2f}")
-        st.write(f"Tax Amount: ${tax_amount:.2f}")
+        st.write(f"Tax Amount: ${total_tax:.2f}")
         st.write(f"Total: ${total:.2f}")
 
         st.session_state.form_data['date'] = st.date_input('Date', st.session_state.form_data['date'])
@@ -80,7 +88,7 @@ def main():
                     'Date': [item['Date'] for item in valid_items],
                     'Item': [item['Item'] for item in valid_items],
                     'Price': [item['Price'] for item in valid_items],
-                    'Tax Amount': [tax_amount / len(valid_items)] * len(valid_items),  # Distribute tax equally
+                    'Tax Amount': [item['Tax'] for item in valid_items],  # Per-item tax
                     'Total': [total] * len(valid_items)
                 })
                 st.session_state.form_submitted = True
