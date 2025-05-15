@@ -99,7 +99,7 @@ def main():
                 subtotal_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
                     'Date': [valid_items[0]['Date']],
-                    'Item': [''],
+                    'Item': ['SUBTOTAL'],
                     'Quantity': [''],
                     'Price': [''],
                     'Amount': [subtotal]
@@ -109,7 +109,7 @@ def main():
                 tax_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
                     'Date': [valid_items[0]['Date']],
-                    'Item': [''],
+                    'Item': ['TAX'],
                     'Quantity': [''],
                     'Price': [''],
                     'Amount': [tax_amount]
@@ -119,7 +119,7 @@ def main():
                 total_row = pd.DataFrame({
                     'Company': [st.session_state.form_data['company_name']],
                     'Date': [valid_items[0]['Date']],
-                    'Item': [''],
+                    'Item': ['TOTAL'],
                     'Quantity': [''],
                     'Price': [''],
                     'Amount': [total]
